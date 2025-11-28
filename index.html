@@ -5,20 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>동원 회장님 채널 기획 대시보드 (통합판)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js for Radar Chart -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --dw-dark: #3D2B24;
-            --dw-point: #C9734E;
+            /* Dongwon's Official Palette */
+            --dw-brown-dark: #5D4037;
+            --dw-brown-med: #8D6E63;
             --dw-camel: #C28E5B;
+            --dw-orange: #C9734E;
             --dw-cream: #E6CF93;
-            --dw-sand: #D1B082;
             --dw-bg: #FDFBF7;
         }
-
         body {
             font-family: 'Noto Sans KR', sans-serif;
             background-color: var(--dw-bg);
@@ -26,34 +24,42 @@
         }
         .serif-font { font-family: 'Noto Serif KR', serif; }
         
+        /* Navigation */
         .nav-item.active {
-            background-color: var(--dw-dark);
+            background-color: var(--dw-brown-dark);
             color: var(--dw-cream);
             font-weight: 700;
-            border-bottom: 3px solid var(--dw-point);
+            border-bottom: 3px solid var(--dw-orange);
+        }
+        
+        /* Components */
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(93, 64, 55, 0.1), 0 2px 4px -1px rgba(93, 64, 55, 0.06);
+            border: 1px solid rgba(194, 142, 91, 0.1);
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(93, 64, 55, 0.15);
         }
         .tab-btn.active {
-            border-bottom: 3px solid var(--dw-point);
-            color: var(--dw-dark);
+            border-bottom: 3px solid var(--dw-orange);
+            color: var(--dw-brown-dark);
             font-weight: 700;
             background-color: rgba(230, 207, 147, 0.2);
         }
         
-        .card {
-            background-color: white;
-            border-radius: 1rem;
-            box-shadow: 0 4px 10px rgba(61, 43, 36, 0.05);
-            transition: transform 0.2s, box-shadow 0.2s;
-            border: 1px solid rgba(209, 176, 130, 0.2);
+        /* Utils */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
         }
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(61, 43, 36, 0.1);
-        }
-
         .loader {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--dw-point);
+            border-top: 4px solid var(--dw-orange);
             border-radius: 50%;
             width: 30px;
             height: 30px;
@@ -61,39 +67,27 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* 스크롤바 커스텀 */
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: var(--dw-bg); }
         ::-webkit-scrollbar-thumb { background: var(--dw-camel); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--dw-point); }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 500px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 350px;
-        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--dw-orange); }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
 
     <!-- Header -->
-    <header style="background-color: var(--dw-dark);" class="text-white p-6 shadow-xl relative overflow-hidden">
+    <header class="bg-[#5D4037] text-white p-6 shadow-xl relative overflow-hidden">
         <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full transform translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
-        
         <div class="container mx-auto flex flex-col md:flex-row items-center relative z-10">
-            <!-- 프로필 이미지 -->
+            <!-- Profile Image -->
             <div class="mb-4 md:mb-0 md:mr-6 flex-shrink-0 group relative cursor-pointer" onclick="document.getElementById('profile-upload').click()" title="클릭하여 회장님 사진 변경">
                 <div class="relative">
                     <img id="profile-image" src="KakaoTalk_Photo_2025-11-26-23-24-24.jpg" alt="엄근진 동원 회장님" class="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 shadow-lg object-cover transition-transform duration-300 group-hover:scale-105" style="border-color: var(--dw-cream);">
                     <div class="absolute inset-0 rounded-full bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <span class="text-white text-3xl">📷</span>
                     </div>
-                    <div class="absolute -bottom-2 -right-2 bg-white text-xs font-bold px-2 py-1 rounded-full shadow border border-gray-200 text-gray-800 z-10 pointer-events-none">
-                        회장님
-                    </div>
+                    <div class="absolute -bottom-2 -right-2 bg-white text-xs font-bold px-2 py-1 rounded-full shadow border border-gray-200 text-gray-800 z-10 pointer-events-none">회장님</div>
                 </div>
                 <input type="file" id="profile-upload" accept="image/*" class="hidden" onchange="updateProfileImage(this)">
             </div>
@@ -101,22 +95,22 @@
             <div class="flex flex-col md:flex-row justify-between items-center flex-grow">
                 <div class="mb-4 md:mb-0 text-center md:text-left">
                     <h1 class="text-3xl font-bold serif-font tracking-wide text-[#FDFBF7]">🐶 동원 회장님 전략기획실</h1>
-                    <p class="text-sm mt-1 font-light opacity-90" style="color: var(--dw-sand);">"니들이 개맛을 알아?" 산전수전 다 겪은 11살의 요양 라이프 (with 동생)</p>
+                    <p class="text-sm mt-1 font-light opacity-90" style="color: var(--dw-camel);">"니들이 개맛을 알아?" 산전수전 다 겪은 11살의 요양 라이프</p>
                 </div>
-                
-                <div class="flex space-x-6 bg-black bg-opacity-20 p-3 rounded-xl backdrop-blur-sm">
-                    <div class="text-center px-2">
-                        <div class="text-2xl font-bold" style="color: var(--dw-cream);">11세</div>
-                        <div class="text-xs opacity-70">나이 (개르신)</div>
+                <!-- Stats -->
+                <div class="flex space-x-6 bg-black bg-opacity-20 p-3 rounded-xl backdrop-blur-sm text-center">
+                    <div class="px-2">
+                        <div class="text-xl font-bold text-[#E6CF93]">11세</div>
+                        <div class="text-xs opacity-70">나이</div>
                     </div>
                     <div class="w-px bg-white opacity-20"></div>
-                    <div class="text-center px-2">
-                        <div class="text-2xl font-bold" style="color: var(--dw-cream);">2채</div>
-                        <div class="text-xs opacity-70">보유 부동산</div>
+                    <div class="px-2">
+                        <div class="text-xl font-bold text-[#E6CF93]">2채</div>
+                        <div class="text-xs opacity-70">자가 보유</div>
                     </div>
                     <div class="w-px bg-white opacity-20"></div>
-                    <div class="text-center px-2">
-                        <div class="text-2xl font-bold" style="color: var(--dw-point);">∞</div>
+                    <div class="px-2">
+                        <div class="text-xl font-bold text-[#C9734E]">∞</div>
                         <div class="text-xs opacity-70">엄근진력</div>
                     </div>
                 </div>
@@ -128,11 +122,13 @@
     <nav class="bg-white shadow-md sticky top-0 z-50 border-b border-[#E6CF93]">
         <div class="container mx-auto overflow-x-auto">
             <ul class="flex min-w-full md:justify-center text-sm md:text-base whitespace-nowrap">
-                <li><button onclick="navigateTo('section-persona')" class="nav-item active px-6 py-4 block hover:bg-orange-50 transition-colors duration-200">🧐 회장님 페르소나</button></li>
+                <!-- Concept removed as requested -->
+                <li><button onclick="navigateTo('section-persona')" class="nav-item active px-6 py-4 block hover:bg-orange-50 transition-colors duration-200">🧐 회장님 프로필</button></li>
+                <li><button onclick="navigateTo('section-visuals')" class="nav-item px-6 py-4 block hover:bg-orange-50 transition-colors duration-200">🎨 비주얼 & 행동</button></li>
                 <li><button onclick="navigateTo('section-production')" class="nav-item px-6 py-4 block hover:bg-orange-50 transition-colors duration-200">🎬 제작 가이드</button></li>
-                <li><button onclick="navigateTo('section-scenarios')" class="nav-item px-6 py-4 block hover:bg-orange-50 transition-colors duration-200">📝 시나리오 보드</button></li>
+                <li><button onclick="navigateTo('section-scenarios')" class="nav-item px-6 py-4 block hover:bg-orange-50 transition-colors duration-200">📝 시나리오</button></li>
                 <li><button onclick="navigateTo('section-strategy')" class="nav-item px-6 py-4 block hover:bg-orange-50 transition-colors duration-200">🚀 성장 로드맵</button></li>
-                <li><button onclick="navigateTo('section-ai-tools')" class="nav-item px-6 py-4 block hover:bg-orange-50 transition-colors duration-200 font-bold" style="color: var(--dw-point);">✨ AI 비서실 & 공유방</button></li>
+                <li><button onclick="navigateTo('section-ai-tools')" class="nav-item px-6 py-4 block hover:bg-orange-50 transition-colors duration-200 font-bold" style="color: var(--dw-orange);">✨ AI 비서실 & 공유</button></li>
             </ul>
         </div>
     </nav>
@@ -140,10 +136,10 @@
     <!-- Main Content -->
     <main class="flex-grow container mx-auto p-4 md:p-8 space-y-8">
 
-        <!-- SECTION 2: Persona -->
+        <!-- SECTION 1: Persona -->
         <section id="section-persona" class="space-y-6">
             <div class="bg-white p-6 rounded-xl shadow-sm" style="border-left: 5px solid var(--dw-camel);">
-                <h2 class="text-2xl font-bold mb-2 serif-font" style="color: var(--dw-dark);">🧐 채널 페르소나: 프라이빗 실버타운</h2>
+                <h2 class="text-2xl font-bold mb-2 serif-font text-[#5D4037]">🧐 채널 페르소나: 프라이빗 실버타운</h2>
                 <p class="text-gray-600">
                     동원이는 단순한 강아지가 아닙니다. 옆집(작성자 집)을 본인의 <strong>'프라이빗 실버타운'</strong>으로 생각하는 11살 '개르신'입니다.
                 </p>
@@ -152,11 +148,11 @@
             <div class="grid lg:grid-cols-2 gap-8">
                 <!-- Stats Chart -->
                 <div class="card p-6">
-                    <h3 class="text-lg font-bold mb-4 text-center" style="color: var(--dw-dark);">📊 회장님 능력치 분석</h3>
+                    <h3 class="text-lg font-bold mb-4 text-center text-[#5D4037]">📊 회장님 능력치 분석</h3>
                     <div class="chart-container">
                         <canvas id="personaChart"></canvas>
                     </div>
-                    <p class="text-sm text-center text-gray-500 mt-2">*활동량은 매우 낮으나 권위와 귀찮음이 만렙임</p>
+                    <p class="text-sm text-center text-gray-500 mt-2">*산책(순찰)에 대한 열정이 매우 높음</p>
                 </div>
 
                 <div class="space-y-6">
@@ -165,33 +161,43 @@
                         <h3 class="text-lg font-bold mb-4 flex items-center">🎙️ AI 보이스 설정</h3>
                         <div class="space-y-4">
                             <div class="p-3 rounded-lg bg-black bg-opacity-20 border border-white border-opacity-10">
-                                <span class="block text-xs uppercase tracking-wider mb-1" style="color: var(--dw-cream);">Concept</span>
+                                <span class="block text-xs uppercase tracking-wider mb-1 text-[#E6CF93]">Concept</span>
                                 <div class="font-bold text-lg">"개르신 (개+어르신)"</div>
                             </div>
                             <div class="p-3 rounded-lg bg-black bg-opacity-20 border border-white border-opacity-10">
-                                <span class="block text-xs uppercase tracking-wider mb-1" style="color: var(--dw-cream);">Tone</span>
-                                <div class="text-gray-100">중후한 다큐멘터리 내레이션 느낌 or 사극 왕 톤</div>
+                                <span class="block text-xs uppercase tracking-wider mb-1 text-[#E6CF93]">Tone</span>
+                                <div class="text-gray-100">중후한 다큐멘터리 성우 톤 OR 사극 왕 톤</div>
                             </div>
                             <div class="p-3 rounded-lg bg-black bg-opacity-20 border border-white border-opacity-10">
-                                <span class="block text-xs uppercase tracking-wider mb-1" style="color: var(--dw-cream);">Sample Line</span>
-                                <div class="italic text-gray-200">"왔는가. 물이 미지근하다. 불 좀 꺼라." (하오체/근엄한 반말)</div>
+                                <span class="block text-xs uppercase tracking-wider mb-1 text-[#E6CF93]">Sample Line</span>
+                                <div class="italic text-gray-200">"왔는가. 물이 미지근하다. 불 좀 꺼라." (하오체)</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Dictionary -->
                     <div class="card p-6">
-                        <h3 class="text-lg font-bold mb-4" style="color: var(--dw-dark);">📖 용어 사전 (호칭 정리)</h3>
+                        <h3 class="text-lg font-bold mb-4 text-[#5D4037]">📖 용어 사전 (호칭 정리)</h3>
                         <div class="grid grid-cols-2 gap-4 text-sm">
-                            <div class="border p-3 rounded" style="border-color: var(--dw-sand);">
-                                <span class="block font-bold" style="color: var(--dw-dark);">본인 (동원)</span>
+                            <div class="border p-3 rounded border-[#D1B082]">
+                                <span class="block font-bold text-[#5D4037]">본인 (동원)</span>
                                 <span class="text-xl">"나"</span>
                                 <span class="block text-xs text-gray-400 mt-1">세상의 중심</span>
                             </div>
-                            <div class="border p-3 rounded" style="border-color: var(--dw-sand);">
-                                <span class="block font-bold" style="color: var(--dw-dark);">작성자 (옆집)</span>
+                            <div class="border p-3 rounded border-[#D1B082]">
+                                <span class="block font-bold text-[#5D4037]">작성자 (옆집)</span>
                                 <span class="text-xl">"김비서"</span>
                                 <span class="block text-xs text-gray-400 mt-1">별장지기, 자네</span>
+                            </div>
+                            <div class="border p-3 rounded border-[#D1B082]">
+                                <span class="block font-bold text-[#5D4037]">본가 주인</span>
+                                <span class="text-xl">"본집 집사"</span>
+                                <span class="block text-xs text-gray-400 mt-1">밥줄 1호</span>
+                            </div>
+                            <div class="border p-3 rounded border-[#D1B082]">
+                                <span class="block font-bold text-[#5D4037]">옆집 (작성자 집)</span>
+                                <span class="text-xl">"별장"</span>
+                                <span class="block text-xs text-gray-400 mt-1">프라이빗 요양원</span>
                             </div>
                         </div>
                     </div>
@@ -199,30 +205,78 @@
             </div>
         </section>
 
+        <!-- SECTION 2: Visuals & Behavior (New Section) -->
+        <section id="section-visuals" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm" style="border-left: 5px solid var(--dw-orange);">
+                <h2 class="text-2xl font-bold mb-2 serif-font text-[#5D4037]">🎨 비주얼 & 행동 패턴</h2>
+                <p class="text-gray-600">회장님의 활동적인 '순찰' 본능과 일과를 분석합니다.</p>
+            </div>
+
+            <!-- Color Palette -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-[#5D4037] h-24 rounded-lg shadow flex flex-col justify-end p-3 text-white">
+                    <span class="font-bold text-sm">Dongwon Brown</span>
+                    <span class="text-xs opacity-75">#5D4037</span>
+                </div>
+                <div class="bg-[#8D6E63] h-24 rounded-lg shadow flex flex-col justify-end p-3 text-white">
+                    <span class="font-bold text-sm">Soft Brown</span>
+                    <span class="text-xs opacity-75">#8D6E63</span>
+                </div>
+                <div class="bg-[#C28E5B] h-24 rounded-lg shadow flex flex-col justify-end p-3 text-white">
+                    <span class="font-bold text-sm">Royal Camel</span>
+                    <span class="text-xs opacity-75">#C28E5B</span>
+                </div>
+                <div class="bg-[#C9734E] h-24 rounded-lg shadow flex flex-col justify-end p-3 text-white">
+                    <span class="font-bold text-sm">Energy Orange</span>
+                    <span class="text-xs opacity-75">#C9734E</span>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Routine Chart -->
+                <div class="card p-6">
+                    <h3 class="text-center font-bold text-gray-700 mb-4">하루 일과 구성 (우선순위)</h3>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="routineChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-gray-500 mt-2">1위: 산책/순찰 > 2위: 수면 > 3위: 식사</p>
+                </div>
+
+                <!-- Reaction Chart -->
+                <div class="card p-6">
+                    <h3 class="text-center font-bold text-gray-700 mb-4">자극 반응 속도 (Reaction Time)</h3>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="reactionChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-gray-500 mt-2">'산책' 소리에는 0.01초 반응</p>
+                </div>
+            </div>
+        </section>
+
         <!-- SECTION 3: Production -->
         <section id="section-production" class="hidden space-y-6">
              <div class="bg-white p-6 rounded-xl shadow-sm" style="border-left: 5px solid var(--dw-point);">
-                <h2 class="text-2xl font-bold mb-2 serif-font" style="color: var(--dw-dark);">🎬 편집 및 연출 포인트</h2>
-                <p class="text-gray-600">동원이의 무표정과 느릿한 행동에 빠른 비트의 편집을 섞어 '킹받는' 웃음을 유발합니다.</p>
+                <h2 class="text-2xl font-bold mb-2 serif-font text-[#5D4037]">🎬 편집 및 연출 포인트</h2>
+                <p class="text-gray-600">느릿한 행동과 웅장한 음악의 부조화를 노립니다.</p>
             </div>
             <div class="grid md:grid-cols-3 gap-6">
                 <div class="card p-6 hover:bg-orange-50 transition-colors">
                     <div class="text-4xl mb-4">🎥</div>
-                    <h3 class="font-bold text-lg mb-2" style="color: var(--dw-dark);">비주얼 (화면)</h3>
+                    <h3 class="font-bold text-lg mb-2 text-[#5D4037]">비주얼 (화면)</h3>
                     <ul class="text-sm text-gray-600 space-y-2">
-                        <li><strong>동공 지진 vs 정지:</strong> 게슴츠레한 눈, 멍 때리는 표정을 극도로 확대(Zoom-in).</li>
+                        <li><strong>동공 지진 vs 동공 정지:</strong> 눈을 가늘게 뜨거나 멍 때리는 표정을 극도로 확대(Zoom-in).</li>
                     </ul>
                 </div>
                 <div class="card p-6 hover:bg-orange-50 transition-colors">
                     <div class="text-4xl mb-4">🎵</div>
-                    <h3 class="font-bold text-lg mb-2" style="color: var(--dw-dark);">오디오 (BGM)</h3>
+                    <h3 class="font-bold text-lg mb-2 text-[#5D4037]">오디오 (BGM)</h3>
                     <ul class="text-sm text-gray-600 space-y-2">
-                        <li><strong>부조화의 미학:</strong> 행동은 정적인데, BGM은 웅장하거나 긴박하게.</li>
+                        <li><strong>부조화의 미학:</strong> 행동은 정적인데 BGM은 긴박한 EDM이나 웅장한 오케스트라.</li>
                     </ul>
                 </div>
                 <div class="card p-6 hover:bg-orange-50 transition-colors">
                     <div class="text-4xl mb-4">✍️</div>
-                    <h3 class="font-bold text-lg mb-2" style="color: var(--dw-dark);">자막 스타일</h3>
+                    <h3 class="font-bold text-lg mb-2 text-[#5D4037]">자막 스타일</h3>
                     <ul class="text-sm text-gray-600 space-y-2">
                         <li><strong>진지한 궁서체:</strong> 뉴스 속보나 다큐멘터리 자막 느낌.</li>
                     </ul>
@@ -233,32 +287,32 @@
         <!-- SECTION 4: Scenarios -->
         <section id="section-scenarios" class="hidden space-y-6">
             <div class="bg-white p-6 rounded-xl shadow-sm" style="border-left: 5px solid var(--dw-sand);">
-                <h2 class="text-2xl font-bold mb-2 serif-font" style="color: var(--dw-dark);">📝 시나리오 보드 (엄근진 ver)</h2>
+                <h2 class="text-2xl font-bold mb-2 serif-font text-[#5D4037]">📝 시나리오 보드 (산책광 ver)</h2>
                 <p class="text-gray-600">동원이가 '별장'에 와서 벌어지는 3가지 핵심 상황별 대본입니다.</p>
             </div>
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden min-h-[500px] border" style="border-color: var(--dw-sand);">
-                <div class="flex border-b" style="border-color: var(--dw-sand);">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden min-h-[500px] border border-[#D1B082]">
+                <div class="flex border-b border-[#D1B082]">
                     <button onclick="showScenario(1)" id="tab-1" class="tab-btn active flex-1 py-4 text-center font-medium hover:bg-orange-50">#1 출근 (요양)</button>
-                    <button onclick="showScenario(2)" id="tab-2" class="tab-btn flex-1 py-4 text-center font-medium hover:bg-orange-50">#2 산책 거부</button>
+                    <button onclick="showScenario(2)" id="tab-2" class="tab-btn flex-1 py-4 text-center font-medium hover:bg-orange-50">#2 산책 독촉</button>
                     <button onclick="showScenario(3)" id="tab-3" class="tab-btn flex-1 py-4 text-center font-medium hover:bg-orange-50">#3 훈수 두기</button>
                 </div>
                 <div class="p-8 bg-[#FFFCF5]">
                     <div id="scenario-1" class="scenario-content space-y-6">
                         <div class="flex justify-between items-center">
-                            <h3 class="text-2xl font-bold serif-font" style="color: var(--dw-dark);">#1. 별장으로 출근하는 회장님</h3>
-                            <span class="text-white px-3 py-1 rounded-full text-sm" style="background-color: var(--dw-camel);">상황: 현관 입장</span>
+                            <h3 class="text-2xl font-bold serif-font text-[#5D4037]">#1. 별장으로 출근하는 회장님</h3>
+                            <span class="text-white px-3 py-1 rounded-full text-sm bg-[#C28E5B]">상황: 현관 입장</span>
                         </div>
                         <div class="grid md:grid-cols-2 gap-8">
                             <div>
-                                <h4 class="font-bold mb-2" style="color: var(--dw-camel);">📸 화면 연출</h4>
+                                <h4 class="font-bold mb-2 text-[#C28E5B]">📸 화면 연출</h4>
                                 <ul class="list-disc list-inside text-gray-700 space-y-2">
                                     <li>문 열어주면 꼬리도 안 흔들고 느릿느릿 걸어 들어와서 상석 착석.</li>
                                     <li>얼굴 타이트하게 <strong>줌인(Zoom-in).</strong></li>
                                 </ul>
                             </div>
                             <div>
-                                <h4 class="font-bold mb-2" style="color: var(--dw-camel);">🎙️ AI 내레이션 (중저음)</h4>
-                                <div class="scenario-script p-4 rounded text-lg leading-relaxed serif-font shadow-inner" style="color: var(--dw-dark);">
+                                <h4 class="font-bold mb-2 text-[#C28E5B]">🎙️ AI 내레이션 (중저음)</h4>
+                                <div class="scenario-script p-4 rounded text-lg leading-relaxed serif-font shadow-inner text-gray-800">
                                     "문 여는 속도가 늦다, 김비서.<br>본가는 시끄러워서 쉴 수가 없어.<br>(소파에 앉으며) 에구구... 허리야...<br>보일러 온도가 적절하군. 합격이다.<br>밥은 차려놨나?"
                                 </div>
                             </div>
@@ -266,39 +320,40 @@
                     </div>
                     <div id="scenario-2" class="scenario-content hidden space-y-6">
                         <div class="flex justify-between items-center">
-                            <h3 class="text-2xl font-bold serif-font" style="color: var(--dw-dark);">#2. 11살의 체력 보존 법칙</h3>
-                            <span class="text-white px-3 py-1 rounded-full text-sm" style="background-color: var(--dw-camel);">상황: 산책 거부</span>
+                            <h3 class="text-2xl font-bold serif-font text-[#5D4037]">#2. 순찰(산책) 독촉</h3>
+                            <span class="text-white px-3 py-1 rounded-full text-sm bg-[#C28E5B]">상황: 현관 대기</span>
                         </div>
                         <div class="grid md:grid-cols-2 gap-8">
                             <div>
-                                <h4 class="font-bold mb-2" style="color: var(--dw-camel);">📸 화면 연출</h4>
+                                <h4 class="font-bold mb-2 text-[#C28E5B]">📸 화면 연출</h4>
                                 <ul class="list-disc list-inside text-gray-700 space-y-2">
-                                    <li>산책 가자고 하네스 들면 자는 척하거나 현관에서 버팀.</li>
+                                    <li>현관 앞에 하네스를 물고 와서 뚫어지게 쳐다봄.</li>
+                                    <li>산책 나가면 위풍당당하게 앞장섬 (파워 워킹).</li>
                                 </ul>
                             </div>
                             <div>
-                                <h4 class="font-bold mb-2" style="color: var(--dw-camel);">🎙️ AI 내레이션 (근엄)</h4>
-                                <div class="scenario-script p-4 rounded text-lg leading-relaxed serif-font shadow-inner" style="color: var(--dw-dark);">
-                                    "이봐, 젊은이. 눈치가 없군.<br>내 나이 열하나야. 도가니 아껴야 해.<br>산책은 '마음'으로 하는 거다.<br>나가고 싶으면 자네 혼자 다녀오게. <br>올 때 고구마 사 오고."
+                                <h4 class="font-bold mb-2 text-[#C28E5B]">🎙️ AI 내레이션 (근엄)</h4>
+                                <div class="scenario-script p-4 rounded text-lg leading-relaxed serif-font shadow-inner text-gray-800">
+                                    "이봐, 젊은이. 해가 중천이야.<br>내 구역 순찰 시간이 늦었네.<br>산책은 '마음'으로 하는 게 아니라 '다리'로 하는 거야.<br>어서 줄을 잡게. 내가 리드하지."
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div id="scenario-3" class="scenario-content hidden space-y-6">
                         <div class="flex justify-between items-center">
-                            <h3 class="text-2xl font-bold serif-font" style="color: var(--dw-dark);">#3. 훈수 두는 회장님</h3>
-                            <span class="text-white px-3 py-1 rounded-full text-sm" style="background-color: var(--dw-camel);">상황: 식사/업무 방해</span>
+                            <h3 class="text-2xl font-bold serif-font text-[#5D4037]">#3. 훈수 두는 회장님</h3>
+                            <span class="text-white px-3 py-1 rounded-full text-sm bg-[#C28E5B]">상황: 식사/업무 방해</span>
                         </div>
                         <div class="grid md:grid-cols-2 gap-8">
                             <div>
-                                <h4 class="font-bold mb-2" style="color: var(--dw-camel);">📸 화면 연출</h4>
+                                <h4 class="font-bold mb-2 text-[#C28E5B]">📸 화면 연출</h4>
                                 <ul class="list-disc list-inside text-gray-700 space-y-2">
                                     <li>작성자가 뭐 먹거나 일할 때, 옆에서 한심하다는 표정으로 빤히 쳐다봄.</li>
                                 </ul>
                             </div>
                             <div>
-                                <h4 class="font-bold mb-2" style="color: var(--dw-camel);">🎙️ AI 내레이션 (훈수)</h4>
-                                <div class="scenario-script p-4 rounded text-lg leading-relaxed serif-font shadow-inner" style="color: var(--dw-dark);">
+                                <h4 class="font-bold mb-2 text-[#C28E5B]">🎙️ AI 내레이션 (훈수)</h4>
+                                <div class="scenario-script p-4 rounded text-lg leading-relaxed serif-font shadow-inner text-gray-800">
                                     "(혀를 차며) 쯧쯧... 밥 먹는 꼴하고는...<br>그렇게 먹어서 언제 살 뺄래?<br>...한 입만 줘봐. 맛이나 보게.<br>(안 주면)<br>독하다 독해. 내가 이러려고 여기 왔나 싶다."
                                 </div>
                             </div>
@@ -311,12 +366,32 @@
         <!-- SECTION 5: Strategy -->
         <section id="section-strategy" class="hidden space-y-6">
              <div class="bg-white p-6 rounded-xl shadow-sm" style="border-left: 5px solid var(--dw-point);">
-                <h2 class="text-2xl font-bold mb-2 serif-font" style="color: var(--dw-dark);">🚀 프로필 설정 및 운영 주의사항</h2>
+                <h2 class="text-2xl font-bold mb-2 serif-font text-[#5D4037]">🚀 성장 로드맵 & 운영 전략</h2>
                 <p class="text-gray-600">회장님의 품격에 맞는 프로필 설정과 노령견을 위한 세심한 배려가 필요합니다.</p>
             </div>
+            
+            <!-- Roadmap Visualization -->
+            <div class="relative py-8">
+                <div class="absolute inset-0 flex items-center" aria-hidden="true"><div class="w-full border-t border-gray-300"></div></div>
+                <div class="relative flex justify-between">
+                    <div class="bg-white p-4 rounded-lg border-2 shadow-lg w-1/3 mx-2 text-center" style="border-color: var(--dw-point);">
+                        <span class="absolute -top-4 left-1/2 transform -translate-x-1/2 text-white px-2 py-1 text-xs rounded" style="background-color: var(--dw-point);">1단계</span>
+                        <h3 class="font-bold mb-2 text-[#5D4037]">캐릭터 구축</h3>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg border-2 border-gray-300 shadow w-1/3 mx-2 text-center opacity-80">
+                        <span class="absolute -top-4 left-1/2 transform -translate-x-1/2 text-white px-2 py-1 text-xs rounded" style="background-color: var(--dw-camel);">2단계</span>
+                        <h3 class="font-bold mb-2 text-gray-700">관계성 강화</h3>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg border-2 border-gray-300 shadow w-1/3 mx-2 text-center opacity-80">
+                        <span class="absolute -top-4 left-1/2 transform -translate-x-1/2 text-white px-2 py-1 text-xs rounded" style="background-color: var(--dw-camel);">3단계</span>
+                        <h3 class="font-bold mb-2 text-gray-700">팬덤 형성</h3>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid md:grid-cols-2 gap-6">
                 <div class="card p-6">
-                    <h3 class="font-bold text-lg mb-4" style="color: var(--dw-dark);">📝 프로필 소개 (Bio) 예시</h3>
+                    <h3 class="font-bold text-lg mb-4 text-[#5D4037]">📝 프로필 소개 (Bio) 예시</h3>
                     <div class="bg-gray-50 p-4 rounded border border-gray-200 text-sm leading-relaxed text-gray-700">
                         <p class="font-bold mb-2">동원 (11세 / 무직 / 옆집 거주)</p>
                         <p>"견생 11년 차, 이제 웬만한 건 재미없다."</p>
@@ -326,7 +401,7 @@
                     </div>
                 </div>
                 <div class="card p-6" style="background-color: var(--dw-bg);">
-                    <h3 class="font-bold text-lg mb-4" style="color: var(--dw-dark);">🏷️ 추천 해시태그</h3>
+                    <h3 class="font-bold text-lg mb-4 text-[#5D4037]">🏷️ 추천 해시태그</h3>
                     <div class="bg-white p-4 rounded border mb-4 text-sm break-all" style="border-color: var(--dw-sand); color: var(--dw-camel);" id="hashtag-box">
                         #개르신 #11살강아지 #노견만세 #회장님오셨습니까 #엄근진 #옆집강아지 #남의집상전 #시니어모델 #동원이의이중생활 #AI릴스
                     </div>
@@ -336,14 +411,16 @@
                     <p id="copy-msg" class="text-center text-xs text-green-600 mt-2 hidden">복사되었습니다!</p>
                 </div>
             </div>
+            
+            <!-- Health Warning -->
              <div class="border-l-4 p-6 mt-6 bg-white shadow-md" style="border-color: #ef4444;">
                 <div class="flex">
                     <div class="flex-shrink-0 text-2xl">🏥</div>
                     <div class="ml-4">
                         <h3 class="text-lg font-bold text-red-600">11살 동원이를 위한 특별 주의사항 (필독)</h3>
                         <div class="mt-2 text-sm text-gray-700 space-y-2">
-                            <p><strong>1. 무리한 연출 금지 🚫</strong><br>노령견이므로 억지로 깨우거나, 걷기 싫어하는데 끌고 가는 영상은 절대 금물입니다.</p>
-                            <p><strong>2. 건강 강조 💪</strong><br>11살임에도 건강하게 두 집을 오가는 모습을 보여주면 큰 공감을 얻을 수 있습니다.</p>
+                            <p><strong>1. 무리한 연출 금지 🚫</strong><br>노령견이므로 억지로 깨우거나, 걷기 싫어하는데 끌고 가는 영상은 절대 금물입니다. "안 움직이는 것" 자체를 콘텐츠로 만드세요.</p>
+                            <p><strong>2. 건강 강조 💪</strong><br>11살임에도 건강하게 두 집을 오가는 모습을 보여주면, 노령견 키우는 분들에게 큰 공감과 응원을 받을 수 있습니다.</p>
                         </div>
                     </div>
                 </div>
@@ -355,7 +432,7 @@
             <div class="bg-white p-6 rounded-xl shadow-sm" style="border-left: 5px solid var(--dw-point);">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-2xl font-bold mb-2 serif-font" style="color: var(--dw-dark);">✨ AI 비서실 & 공유방</h2>
+                        <h2 class="text-2xl font-bold mb-2 serif-font text-[#5D4037]">✨ AI 비서실 & 공유방</h2>
                         <p class="text-gray-600">아이디어를 생성하고 동생과 실시간으로 공유하세요. (클라우드 저장)</p>
                     </div>
                     <div class="text-4xl">🤝</div>
@@ -395,11 +472,11 @@
             <div class="grid lg:grid-cols-2 gap-8">
                 <!-- Tool 1: Scenario -->
                 <div class="card p-6 border-t-4" style="border-color: var(--dw-point);">
-                    <h3 class="text-xl font-bold mb-4 flex items-center" style="color: var(--dw-dark);">
+                    <h3 class="text-xl font-bold mb-4 flex items-center text-[#5D4037]">
                         <span class="mr-2">🎬</span> AI 시나리오 작가
                     </h3>
                     <div class="space-y-4">
-                        <textarea id="scenario-input" class="w-full p-3 border rounded-lg focus:ring-2 h-24" style="border-color: var(--dw-sand); --tw-ring-color: var(--dw-camel);" placeholder="상황 입력 (예: 동원이가 노트북 위에서 잠듬)"></textarea>
+                        <textarea id="scenario-input" class="w-full p-3 border rounded-lg focus:ring-2 h-24" style="border-color: var(--dw-sand); --tw-ring-color: var(--dw-camel);" placeholder="상황 입력 (예: 비 오는 날 순찰 나가겠다고 고집 피움)"></textarea>
                         <button onclick="generateScript()" class="w-full text-white py-3 rounded-lg font-bold hover:opacity-90 transition flex justify-center items-center shadow-md" style="background-color: var(--dw-point);">
                             <span id="scenario-btn-text">✨ 시나리오 생성</span>
                             <div id="scenario-loader" class="loader ml-2 hidden" style="width: 20px; height: 20px; border-width: 2px; border-top-color: white;"></div>
@@ -410,11 +487,11 @@
 
                 <!-- Tool 2: Caption -->
                 <div class="card p-6 border-t-4" style="border-color: var(--dw-point);">
-                    <h3 class="text-xl font-bold mb-4 flex items-center" style="color: var(--dw-dark);">
+                    <h3 class="text-xl font-bold mb-4 flex items-center text-[#5D4037]">
                         <span class="mr-2">📸</span> AI 캡션 생성기
                     </h3>
                     <div class="space-y-4">
-                        <textarea id="caption-input" class="w-full p-3 border rounded-lg focus:ring-2 h-24" style="border-color: var(--dw-sand); --tw-ring-color: var(--dw-camel);" placeholder="사진 내용 입력 (예: 산책 가자니까 죽은 척 함)"></textarea>
+                        <textarea id="caption-input" class="w-full p-3 border rounded-lg focus:ring-2 h-24" style="border-color: var(--dw-sand); --tw-ring-color: var(--dw-camel);" placeholder="사진 내용 입력 (예: 당당하게 앞장서서 걷는 뒷모습)"></textarea>
                         <button onclick="generateCaption()" class="w-full text-white py-3 rounded-lg font-bold hover:opacity-90 transition flex justify-center items-center shadow-md" style="background-color: var(--dw-point);">
                             <span id="caption-btn-text">✨ 캡션 생성</span>
                             <div id="caption-loader" class="loader ml-2 hidden" style="width: 20px; height: 20px; border-width: 2px; border-top-color: white;"></div>
@@ -434,7 +511,6 @@
                         <span id="connection-status" class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full">● 연결 확인 중...</span>
                     </div>
                     
-                    <!-- NEW: Export Button -->
                     <button onclick="downloadCSV()" class="flex items-center text-sm bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition shadow-sm">
                         <span class="mr-2">📊</span> 엑셀/스프레드시트로 내보내기
                     </button>
@@ -452,19 +528,20 @@
     </main>
 
     <!-- Footer -->
-    <footer class="text-center py-8 mt-8" style="background-color: var(--dw-dark); color: var(--dw-sand);">
+    <footer class="text-center py-8 mt-8 bg-[#3D2B24] text-[#C28E5B]">
         <div class="container mx-auto px-4">
             <p class="serif-font font-bold text-lg mb-2">동원 회장님 전략기획실</p>
             <p class="text-xs opacity-70">Double Life Dog Dongwon Project</p>
         </div>
     </footer>
 
+    <!-- Firebase Logic Module -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Global Config
+        // Config
         const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : new URLSearchParams(window.location.search).get('__firebase_config');
         const appId = typeof __app_id !== 'undefined' ? __app_id : new URLSearchParams(window.location.search).get('__app_id') || 'default-app';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : undefined;
@@ -473,7 +550,7 @@
         let auth;
         let currentUser = null;
         let isFirebaseAvailable = false;
-        let currentIdeasData = []; // Store data for CSV export
+        let currentIdeasData = []; 
 
         async function initFirebase() {
             const statusEl = document.getElementById('connection-status');
@@ -482,7 +559,7 @@
                 console.warn("Firebase configuration missing. Switching to Local Mode.");
                 statusEl.textContent = "🟠 로컬 저장 모드 (기기 내 저장)";
                 statusEl.className = "text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full";
-                renderSharedListFromLocal(); // Load local data immediately
+                renderSharedListFromLocal(); 
                 return;
             }
 
@@ -491,14 +568,12 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
                 
-                // Auth Logic
                 if (initialAuthToken) {
                     await signInWithCustomToken(auth, initialAuthToken);
                 } else {
                     await signInAnonymously(auth);
                 }
 
-                // Auth Listener
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         currentUser = user;
@@ -507,7 +582,6 @@
                         statusEl.className = "text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full animate-pulse";
                         subscribeToIdeas();
                     } else {
-                        // Auth lost, fallback
                         currentUser = null;
                         isFirebaseAvailable = false;
                         statusEl.textContent = "🟠 로컬 저장 모드 (연결 끊김)";
@@ -523,11 +597,8 @@
             }
         }
 
-        // Initialize Firebase
         initFirebase();
 
-        // --- Shared Idea Functions attached to Window ---
-        
         window.saveIdea = async (data, type) => {
             const writer = document.getElementById('writer-select').value;
             const newItem = {
@@ -537,7 +608,6 @@
                 createdAt: new Date().toISOString()
             };
 
-            // CASE 1: Firebase Available
             if (isFirebaseAvailable && currentUser) {
                 const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_ideas');
                 try {
@@ -545,29 +615,25 @@
                     alert("아이디어가 공유방(클라우드)에 저장되었습니다!");
                 } catch (e) {
                     console.error("Cloud save failed, falling back to local:", e);
-                    saveLocal(newItem); // Fallback
+                    saveLocal(newItem);
                 }
-            } 
-            // CASE 2: Local Mode
-            else {
+            } else {
                 saveLocal(newItem);
             }
         };
 
         function saveLocal(item) {
             const saved = JSON.parse(localStorage.getItem('dw_shared_ideas_local') || '[]');
-            // Add ID for local items
             item.id = 'local_' + Date.now();
             saved.push(item);
             localStorage.setItem('dw_shared_ideas_local', JSON.stringify(saved));
             renderSharedListFromLocal();
-            alert("아이디어가 보관함(로컬)에 저장되었습니다! (서버 미연동 상태)");
+            alert("아이디어가 보관함(로컬)에 저장되었습니다!");
         }
 
         window.deleteIdea = async (id) => {
             if (!confirm("정말 이 아이디어를 삭제하시겠습니까?")) return;
             
-            // Determine if it's a local ID or Firebase ID
             if (id.startsWith('local_')) {
                 const saved = JSON.parse(localStorage.getItem('dw_shared_ideas_local') || '[]');
                 const updated = saved.filter(item => item.id !== id);
@@ -585,10 +651,8 @@
             }
         };
 
-        // --- Rendering Logic ---
-
         function renderList(ideas) {
-            currentIdeasData = ideas; // Update global data for CSV export
+            currentIdeasData = ideas;
             const listEl = document.getElementById('shared-list');
             
             if (ideas.length === 0) {
@@ -635,15 +699,12 @@
             listEl.innerHTML = html;
         }
 
-        // Render Local Data
         function renderSharedListFromLocal() {
             const ideas = JSON.parse(localStorage.getItem('dw_shared_ideas_local') || '[]');
-            // Sort local ideas
             ideas.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             renderList(ideas);
         }
 
-        // Subscribe to Firebase Data
         function subscribeToIdeas() {
             const listEl = document.getElementById('shared-list');
             const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_ideas');
@@ -653,8 +714,6 @@
                 snapshot.forEach((doc) => {
                     ideas.push({ id: doc.id, ...doc.data() });
                 });
-                
-                // Sort
                 ideas.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                 renderList(ideas);
             }, (error) => {
@@ -666,26 +725,22 @@
             });
         }
 
-        // --- CSV Export Logic ---
         window.downloadCSV = () => {
             if (!currentIdeasData || currentIdeasData.length === 0) {
                 alert("내보낼 데이터가 없습니다.");
                 return;
             }
-
-            // CSV Header
-            let csvContent = "\uFEFF"; // BOM for Excel encoding support
+            let csvContent = "\uFEFF"; 
             csvContent += "날짜,작성자,유형,내용1(제목/대사),내용2(본문/연출),해시태그/BGM\n";
 
             currentIdeasData.forEach(item => {
                 const date = new Date(item.createdAt).toLocaleDateString();
                 const writer = item.writer || '익명';
                 const type = item.type === 'scenario' ? '시나리오' : '캡션';
-                
                 let col1 = '', col2 = '', col3 = '';
                 
                 if (item.type === 'scenario') {
-                    col1 = `"${(item.data.narration || '').replace(/"/g, '""')}"`; // Escape quotes
+                    col1 = `"${(item.data.narration || '').replace(/"/g, '""')}"`;
                     col2 = `"${(item.data.visual || '').replace(/"/g, '""')}"`;
                     col3 = `"${(item.data.bgm || '').replace(/"/g, '""')}"`;
                 } else {
@@ -693,11 +748,9 @@
                     col2 = `"${(item.data.caption || '').replace(/"/g, '""')}"`;
                     col3 = `"${(item.data.hashtags || '').replace(/"/g, '""')}"`;
                 }
-
                 csvContent += `${date},${writer},${type},${col1},${col2},${col3}\n`;
             });
 
-            // Trigger Download
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
@@ -713,19 +766,14 @@
     <script>
         // Navigation Logic
         function navigateTo(sectionId) {
-            const sections = ['section-persona', 'section-production', 'section-scenarios', 'section-strategy', 'section-ai-tools'];
-            
-            // Hide all sections
+            const sections = ['section-persona', 'section-visuals', 'section-production', 'section-scenarios', 'section-strategy', 'section-ai-tools'];
             sections.forEach(id => {
                 const el = document.getElementById(id);
                 if(el) el.classList.add('hidden');
             });
-            
-            // Show target
-            const targetSection = document.getElementById(sectionId);
-            if(targetSection) targetSection.classList.remove('hidden');
+            const target = document.getElementById(sectionId);
+            if(target) target.classList.remove('hidden');
 
-            // Update Nav Buttons
             document.querySelectorAll('.nav-item').forEach(btn => {
                 btn.classList.remove('active');
                 if(btn.getAttribute('onclick').includes(sectionId)) {
@@ -733,10 +781,11 @@
                 }
             });
 
-            if(sectionId === 'section-persona') renderChart();
+            if(sectionId === 'section-persona') renderPersonaChart();
+            if(sectionId === 'section-visuals') renderBehaviorCharts();
         }
 
-        // Tab Logic for Scenarios
+        // Tab Logic
         function showScenario(num) {
             for(let i=1; i<=3; i++) {
                 document.getElementById(`scenario-${i}`).classList.add('hidden');
@@ -747,27 +796,23 @@
             document.getElementById(`tab-${num}`).classList.add('active');
         }
 
-        // Chart.js Implementation
+        // Chart 1: Persona Radar
         let personaChart = null;
-        function renderChart() {
+        function renderPersonaChart() {
             if (personaChart) return;
-            
-            const canvas = document.getElementById('personaChart');
-            if(!canvas) return; // Guard against missing element
-
-            const ctx = canvas.getContext('2d');
+            const ctx = document.getElementById('personaChart').getContext('2d');
             const rootStyles = getComputedStyle(document.documentElement);
-            const dwDark = rootStyles.getPropertyValue('--dw-dark').trim();
-            const dwPoint = rootStyles.getPropertyValue('--dw-point').trim();
+            const dwDark = rootStyles.getPropertyValue('--dw-brown-dark').trim();
+            const dwPoint = rootStyles.getPropertyValue('--dw-orange').trim();
             const dwCamel = rootStyles.getPropertyValue('--dw-camel').trim();
 
             personaChart = new Chart(ctx, {
                 type: 'radar',
                 data: {
-                    labels: ['엄근진', '뻔뻔함', '식탐', '활동량', '나이', '귀찮음'],
+                    labels: ['엄근진', '뻔뻔함', '식탐', '활동량(순찰)', '권위', '귀차니즘'],
                     datasets: [{
                         label: '동원 회장님',
-                        data: [95, 98, 85, 10, 90, 99], 
+                        data: [95, 98, 60, 100, 100, 50], // High Activity, Low Appetite
                         backgroundColor: 'rgba(194, 142, 91, 0.3)',
                         borderColor: dwCamel, 
                         pointBackgroundColor: dwPoint,
@@ -776,14 +821,63 @@
                 },
                 options: {
                     maintainAspectRatio: false,
-                    responsive: true,
                     scales: {
                         r: {
+                            min: 0, max: 100,
                             angleLines: { color: 'rgba(61, 43, 36, 0.1)' },
                             grid: { color: 'rgba(61, 43, 36, 0.1)' },
                             pointLabels: { font: { size: 12, weight: 'bold' }, color: dwDark },
                             ticks: { display: false, backdropColor: 'transparent' }
                         }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // Chart 2 & 3: Visuals Section
+        let routineChart = null;
+        let reactionChart = null;
+        function renderBehaviorCharts() {
+            if (routineChart) return;
+
+            // Routine
+            const ctxRoutine = document.getElementById('routineChart').getContext('2d');
+            routineChart = new Chart(ctxRoutine, {
+                type: 'doughnut',
+                data: {
+                    labels: ['산책/순찰', '수면', '인간 관찰', '식사', '멍 때리기'],
+                    datasets: [{
+                        data: [40, 30, 15, 10, 5],
+                        backgroundColor: ['#C9734E', '#5D4037', '#8D6E63', '#E6CF93', '#C28E5B'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right' } }
+                }
+            });
+
+            // Reaction
+            const ctxReaction = document.getElementById('reactionChart').getContext('2d');
+            reactionChart = new Chart(ctxReaction, {
+                type: 'bar',
+                data: {
+                    labels: ['산책 가자는 말', '본가 집사 호출', '옆집 비서 퇴근', '간식 소리'],
+                    datasets: [{
+                        label: '반응 속도 (초)',
+                        data: [0.01, 3.0, 0.5, 1.5],
+                        backgroundColor: ['#C9734E', '#8D6E63', '#C28E5B', '#5D4037'],
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: { grid: { display: false }, title: { display: true, text: '반응 시간 (초)' } },
+                        y: { grid: { display: false } }
                     },
                     plugins: { legend: { display: false } }
                 }
@@ -799,7 +893,6 @@
             });
         }
 
-        // Profile Image Logic
         function updateProfileImage(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -850,7 +943,7 @@
             }
         }
 
-        // Gemini API Logic (JSON Mode)
+        // Gemini API Logic
         async function callGemini(prompt, type) {
             const currentKey = apiKey || localStorage.getItem('gemini_user_api_key');
             
@@ -870,8 +963,8 @@
 
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${currentKey}`;
             const instruction = type === 'scenario' 
-                ? "You are a scriptwriter for an 11-year-old cynical dog (Dongwon). He uses old-fashioned, authoritative language (Hao-che). Return ONLY valid JSON with keys: 'visual', 'narration', 'bgm'."
-                : "You are an Instagram manager for a cynical 11-year-old dog (Dongwon). Return ONLY valid JSON with keys: 'title', 'caption', 'hashtags'.";
+                ? "You are a scriptwriter for an 11-year-old cynical dog (Dongwon). He loves walking/patrolling above all else. He treats humans as secretaries. Tone: Authoritative (Hao-che). Return ONLY valid JSON with keys: 'visual', 'narration', 'bgm'."
+                : "You are an Instagram manager for a cynical 11-year-old dog (Dongwon). He is obsessed with patrolling his territory. Return ONLY valid JSON with keys: 'title', 'caption', 'hashtags'.";
 
             const payload = {
                 contents: [{ parts: [{ text: prompt }] }],
@@ -894,7 +987,7 @@
             }
         }
 
-        // Generate Functions
+        // Global Wrappers
         window.generateScript = async () => {
             const input = document.getElementById('scenario-input').value;
             if (!input) return alert("상황을 입력해주세요!");
@@ -999,7 +1092,6 @@
         window.onload = function() {
             initProfileImage();
             checkApiKey();
-            // Start at Persona tab safely
             navigateTo('section-persona');
         };
     </script>
