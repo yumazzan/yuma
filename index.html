@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>동원 회장님 채널 기획 대시보드 (통합판)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for Radar Chart -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dw-dark: #3D2B24;
+            --dw-point: #C9734E;
+            --dw-camel: #C28E5B;
+            --dw-cream: #E6CF93;
+            --dw-sand: #D1B082;
+            --dw-bg: #FDFBF7;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--dw-bg);
+            color: #2d3748;
+        }
+        .serif-font { font-family: 'Noto Serif KR', serif; }
+        
+        .nav-item.active {
+            background-color: var(--dw-dark);
+            color: var(--dw-cream);
+            font-weight: 700;
+            border-bottom: 3px solid var(--dw-point);
+        }
+        .tab-btn.active {
+            border-bottom: 3px solid var(--dw-point);
+            color: var(--dw-dark);
+            font-weight: 700;
+            background-color: rgba(230, 207, 147, 0.2);
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 10px rgba(61, 43, 36, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid rgba(209, 176, 130, 0.2);
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(61, 43, 36, 0.1);
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--dw-point);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--dw-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--dw-camel); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--dw-point); }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header style="background-color: var(--dw-dark);" class="text-white p-6 shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full transform translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
+        
+        <div class="container mx-auto flex flex-col md:flex-row items-center relative z-10">
+            <!-- 프로필 이미지 -->
+            <div class="mb-4 md:mb-0 md:mr-6 flex-shrink-0 group relative cursor-pointer" onclick="document.getElementById('profile-upload').click()" title="클릭하여 회장님 사진 변경">
+                <div class="relative">
+                    <img id="profile-image" src="KakaoTalk_Photo_2025-11-26-23-24-24.jpg" alt="엄근진 동원 회장님" class="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 shadow-lg object-cover transition-transform duration-300 group-hover:scale-105" style="border-color: var(--dw-cream);">
+                    <div class="absolute inset-0 rounded-full bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <span class="text-white text-3xl">📷</span>
+                    </div>
+                    <div class="absolute -bottom-2 -right-2 bg-white text-xs font-bold px-2 py-1 rounded-full shadow border border-gray-200 text-gray-800 z-10 pointer-events-none">
+                        회장님
+                    </div>
+                </div>
+                <input type="file" id="profile-upload" accept="image/*" class="hidden" onchange="updateProfileImage(this)">
+            </div>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center flex-grow">
+                <div class="mb-4 md:mb-0 text-center md:text-left">
+                    <h1 class="text-3xl font-bold serif-font tracking-wide text-[#FDFBF7]">🐶 동원 회장님 전략기획실</h1>
+                    <p class="text-sm mt-1 font-light opacity-90" style="color: var(--dw-sand);">"니들이 개맛을 알아?" 산전수전 다 겪은 11살의 요양 라이프 (with 동생)</p>
+                </div>
+                
+                <div class="flex space-x-6 bg-black bg-opacity-20 p-3 rounded-xl backdrop-blur-sm">
+                    <div class="text-center px-2">
+                        <div class="text-2xl font-bold" style="color: var(--dw-cream);">11세</div>
+                        <div class="text-xs opacity-70">나이 (개르신)</div>
+                    </div>
+                    <div class="w-px bg-white opacity-20"></div>
+                    <div class="text-center px-2">
+                        <div class="text-2xl font-bold" style="color: var(--dw-cream);">2채</div>
+                        <div class="text-xs opacity-70">보유 부동산</div>
+                    </div>
+                    <div class="w-px bg-white opacity-20"></div>
+                    <div class="text-center px-2">
+                        <div class="text-2xl font-bold" style="color: var(--dw-point);">∞</div>
+                        <div class="text-xs opacity-70">엄근진력</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50 border-b border-[#E6CF93]">
+        <div class="container mx-auto overflow-x-auto">
+            <ul class="flex min-w-full md:justify-center text-sm md:text-base whitespace-nowrap">
+                <li><button onclick="navigateTo('section-persona')" class="nav-item active px-6 py-4 block hover:bg-orange-50 transition-colors duration-200">🧐 회장님 페르소나</button></li>
+                <li><button onclick="navigateTo('section-production')" class="nav-item px-6 py-4 block hover:bg-orange-50 transition-colors duration-200">🎬 제작 가이드</button></li>
+                <li><button onclick="navigateTo('section-scenarios')" class="nav-item px-6 py-4 block hover:bg-orange-50 transition-colors duration-200">📝 시나리오 보드</button></li>
+                <li><button onclick="navigateTo('section-strategy')" class="nav-item px-6 py-4 block hover:bg-orange-50 transition-colors duration-200">🚀 성장 로드맵</button></li>
+                <li><button onclick="navigateTo('section-ai-tools')" class="nav-item px-6 py-4 block hover:bg-orange-50 transition-colors duration-200 font-bold" style="color: var(--dw-point);">✨ AI 비서실 & 공유방</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto p-4 md:p-8 space-y-8">
+
+        <!-- SECTION 2: Persona -->
+        <section id="section-persona" class="space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm" style="border-left: 5px solid var(--dw-camel);">
+                <h2 class="text-2xl font-bold mb-2 serif-font" style="color: var(--dw-dark);">🧐 채널 페르소나: 프라이빗 실버타운</h2>
+                <p class="text-gray-600">
+                    동원이는 단순한 강아지가 아닙니다. 옆집(작성자 집)을 본인의 <strong>'프라이빗 실버타운'</strong>으로 생각하는 11살 '개르신'입니다.
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Stats Chart -->
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-4 text-center" style="color: var(--dw-dark);">📊 회장님 능력치 분석</h3>
+                    <div class="chart-container">
+                        <canvas id="personaChart"></canvas>
+                    </div>
+                    <p class="text-sm text-center text-gray-500 mt-2">*활동량은 매우 낮으나 권위와 귀찮음이 만렙임</p>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Voice Settings -->
+                    <div class="card p-6 text-white shadow-lg" style="background-color: var(--dw-camel);">
+                        <h3 class="text-lg font-bold mb-4 flex items-center">🎙️ AI 보이스 설정</h3>
+                        <div class="space-y-4">
+                            <div class="p-3 rounded-lg bg-black bg-opacity-20 border border-white border-opacity-10">
+                                <span class="block text-xs uppercase tracking-wider mb-1" style="color: var(--dw-cream);">Concept</span>
+                                <div class="font-bold text-lg">"개르신 (개+어르신)"</div>
+                            </div>
+                            <div class="p-3 rounded-lg bg-black bg-opacity-20 border border-white border-opacity-10">
+                                <span class="block text-xs uppercase tracking-wider mb-1" style="color: var(--dw-cream);">Tone</span>
+                                <div class="text-gray-100">중후한 다큐멘터리 내레이션 느낌 or 사극 왕 톤</div>
+                            </div>
+                            <div class="p-3 rounded-lg bg-black bg-opacity-20 border border-white border-opacity-10">
+                                <span class="block text-xs uppercase tracking-wider mb-1" style="color: var(--dw-cream);">Sample Line</span>
+                                <div class="italic text-gray-200">"왔는가. 물이 미지근하다. 불 좀 꺼라." (하오체/근엄한 반말)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dictionary -->
+                    <div class="card p-6">
+                        <h3 class="text-lg font-bold mb-4" style="color: var(--dw-dark);">📖 용어 사전 (호칭 정리)</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div class="border p-3 rounded" style="border-color: var(--dw-sand);">
+                                <span class="block font-bold" style="color: var(--dw-dark);">본인 (동원)</span>
+                                <span class="text-xl">"나"</span>
+                                <span class="block text-xs text-gray-400 mt-1">세상의 중심</span>
+                            </div>
+                            <div class="border p-3 rounded" style="border-color: var(--dw-sand);">
+                                <span class="block font-bold" style="color: var(--dw-dark);">작성자 (옆집)</span>
+                                <span class="text-xl">"김비서"</span>
+                                <span class="block text-xs text-gray-400 mt-1">별장지기, 자네</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: Production -->
+        <section id="section-production" class="hidden space-y-6">
+             <div class="bg-white p-6 rounded-xl shadow-sm" style="border-left: 5px solid var(--dw-point);">
+                <h2 class="text-2xl font-bold mb-2 serif-font" style="color: var(--dw-dark);">🎬 편집 및 연출 포인트</h2>
+                <p class="text-gray-600">동원이의 무표정과 느릿한 행동에 빠른 비트의 편집을 섞어 '킹받는' 웃음을 유발합니다.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="card p-6 hover:bg-orange-50 transition-colors">
+                    <div class="text-4xl mb-4">🎥</div>
+                    <h3 class="font-bold text-lg mb-2" style="color: var(--dw-dark);">비주얼 (화면)</h3>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li><strong>동공 지진 vs 정지:</strong> 게슴츠레한 눈, 멍 때리는 표정을 극도로 확대(Zoom-in).</li>
+                    </ul>
+                </div>
+                <div class="card p-6 hover:bg-orange-50 transition-colors">
+                    <div class="text-4xl mb-4">🎵</div>
+                    <h3 class="font-bold text-lg mb-2" style="color: var(--dw-dark);">오디오 (BGM)</h3>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li><strong>부조화의 미학:</strong> 행동은 정적인데, BGM은 웅장하거나 긴박하게.</li>
+                    </ul>
+                </div>
+                <div class="card p-6 hover:bg-orange-50 transition-colors">
+                    <div class="text-4xl mb-4">✍️</div>
+                    <h3 class="font-bold text-lg mb-2" style="color: var(--dw-dark);">자막 스타일</h3>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li><strong>진지한 궁서체:</strong> 뉴스 속보나 다큐멘터리 자막 느낌.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: Scenarios -->
+        <section id="section-scenarios" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm" style="border-left: 5px solid var(--dw-sand);">
+                <h2 class="text-2xl font-bold mb-2 serif-font" style="color: var(--dw-dark);">📝 시나리오 보드 (엄근진 ver)</h2>
+                <p class="text-gray-600">동원이가 '별장'에 와서 벌어지는 3가지 핵심 상황별 대본입니다.</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden min-h-[500px] border" style="border-color: var(--dw-sand);">
+                <div class="flex border-b" style="border-color: var(--dw-sand);">
+                    <button onclick="showScenario(1)" id="tab-1" class="tab-btn active flex-1 py-4 text-center font-medium hover:bg-orange-50">#1 출근 (요양)</button>
+                    <button onclick="showScenario(2)" id="tab-2" class="tab-btn flex-1 py-4 text-center font-medium hover:bg-orange-50">#2 산책 거부</button>
+                    <button onclick="showScenario(3)" id="tab-3" class="tab-btn flex-1 py-4 text-center font-medium hover:bg-orange-50">#3 훈수 두기</button>
+                </div>
+                <div class="p-8 bg-[#FFFCF5]">
+                    <div id="scenario-1" class="scenario-content space-y-6">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-2xl font-bold serif-font" style="color: var(--dw-dark);">#1. 별장으로 출근하는 회장님</h3>
+                            <span class="text-white px-3 py-1 rounded-full text-sm" style="background-color: var(--dw-camel);">상황: 현관 입장</span>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div>
+                                <h4 class="font-bold mb-2" style="color: var(--dw-camel);">📸 화면 연출</h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-2">
+                                    <li>문 열어주면 꼬리도 안 흔들고 느릿느릿 걸어 들어와서 상석 착석.</li>
+                                    <li>얼굴 타이트하게 <strong>줌인(Zoom-in).</strong></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-2" style="color: var(--dw-camel);">🎙️ AI 내레이션 (중저음)</h4>
+                                <div class="scenario-script p-4 rounded text-lg leading-relaxed serif-font shadow-inner" style="color: var(--dw-dark);">
+                                    "문 여는 속도가 늦다, 김비서.<br>본가는 시끄러워서 쉴 수가 없어.<br>(소파에 앉으며) 에구구... 허리야...<br>보일러 온도가 적절하군. 합격이다.<br>밥은 차려놨나?"
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="scenario-2" class="scenario-content hidden space-y-6">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-2xl font-bold serif-font" style="color: var(--dw-dark);">#2. 11살의 체력 보존 법칙</h3>
+                            <span class="text-white px-3 py-1 rounded-full text-sm" style="background-color: var(--dw-camel);">상황: 산책 거부</span>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div>
+                                <h4 class="font-bold mb-2" style="color: var(--dw-camel);">📸 화면 연출</h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-2">
+                                    <li>산책 가자고 하네스 들면 자는 척하거나 현관에서 버팀.</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-2" style="color: var(--dw-camel);">🎙️ AI 내레이션 (근엄)</h4>
+                                <div class="scenario-script p-4 rounded text-lg leading-relaxed serif-font shadow-inner" style="color: var(--dw-dark);">
+                                    "이봐, 젊은이. 눈치가 없군.<br>내 나이 열하나야. 도가니 아껴야 해.<br>산책은 '마음'으로 하는 거다.<br>나가고 싶으면 자네 혼자 다녀오게. <br>올 때 고구마 사 오고."
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="scenario-3" class="scenario-content hidden space-y-6">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-2xl font-bold serif-font" style="color: var(--dw-dark);">#3. 훈수 두는 회장님</h3>
+                            <span class="text-white px-3 py-1 rounded-full text-sm" style="background-color: var(--dw-camel);">상황: 식사/업무 방해</span>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div>
+                                <h4 class="font-bold mb-2" style="color: var(--dw-camel);">📸 화면 연출</h4>
+                                <ul class="list-disc list-inside text-gray-700 space-y-2">
+                                    <li>작성자가 뭐 먹거나 일할 때, 옆에서 한심하다는 표정으로 빤히 쳐다봄.</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-2" style="color: var(--dw-camel);">🎙️ AI 내레이션 (훈수)</h4>
+                                <div class="scenario-script p-4 rounded text-lg leading-relaxed serif-font shadow-inner" style="color: var(--dw-dark);">
+                                    "(혀를 차며) 쯧쯧... 밥 먹는 꼴하고는...<br>그렇게 먹어서 언제 살 뺄래?<br>...한 입만 줘봐. 맛이나 보게.<br>(안 주면)<br>독하다 독해. 내가 이러려고 여기 왔나 싶다."
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: Strategy -->
+        <section id="section-strategy" class="hidden space-y-6">
+             <div class="bg-white p-6 rounded-xl shadow-sm" style="border-left: 5px solid var(--dw-point);">
+                <h2 class="text-2xl font-bold mb-2 serif-font" style="color: var(--dw-dark);">🚀 프로필 설정 및 운영 주의사항</h2>
+                <p class="text-gray-600">회장님의 품격에 맞는 프로필 설정과 노령견을 위한 세심한 배려가 필요합니다.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="card p-6">
+                    <h3 class="font-bold text-lg mb-4" style="color: var(--dw-dark);">📝 프로필 소개 (Bio) 예시</h3>
+                    <div class="bg-gray-50 p-4 rounded border border-gray-200 text-sm leading-relaxed text-gray-700">
+                        <p class="font-bold mb-2">동원 (11세 / 무직 / 옆집 거주)</p>
+                        <p>"견생 11년 차, 이제 웬만한 건 재미없다."</p>
+                        <p>🏠 본가: 잠만 자는 곳</p>
+                        <p>🏡 별장(옆집): 요양 및 갑질하는 곳</p>
+                        <p>📩 비즈니스 문의: 김비서(DM)에게</p>
+                    </div>
+                </div>
+                <div class="card p-6" style="background-color: var(--dw-bg);">
+                    <h3 class="font-bold text-lg mb-4" style="color: var(--dw-dark);">🏷️ 추천 해시태그</h3>
+                    <div class="bg-white p-4 rounded border mb-4 text-sm break-all" style="border-color: var(--dw-sand); color: var(--dw-camel);" id="hashtag-box">
+                        #개르신 #11살강아지 #노견만세 #회장님오셨습니까 #엄근진 #옆집강아지 #남의집상전 #시니어모델 #동원이의이중생활 #AI릴스
+                    </div>
+                    <button onclick="copyHashtags()" class="w-full text-white py-2 rounded transition shadow-md hover:opacity-90" style="background-color: var(--dw-dark);">
+                        📋 해시태그 복사하기
+                    </button>
+                    <p id="copy-msg" class="text-center text-xs text-green-600 mt-2 hidden">복사되었습니다!</p>
+                </div>
+            </div>
+             <div class="border-l-4 p-6 mt-6 bg-white shadow-md" style="border-color: #ef4444;">
+                <div class="flex">
+                    <div class="flex-shrink-0 text-2xl">🏥</div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-bold text-red-600">11살 동원이를 위한 특별 주의사항 (필독)</h3>
+                        <div class="mt-2 text-sm text-gray-700 space-y-2">
+                            <p><strong>1. 무리한 연출 금지 🚫</strong><br>노령견이므로 억지로 깨우거나, 걷기 싫어하는데 끌고 가는 영상은 절대 금물입니다.</p>
+                            <p><strong>2. 건강 강조 💪</strong><br>11살임에도 건강하게 두 집을 오가는 모습을 보여주면 큰 공감을 얻을 수 있습니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 6: AI Tools & Shared Board -->
+        <section id="section-ai-tools" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm" style="border-left: 5px solid var(--dw-point);">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2 serif-font" style="color: var(--dw-dark);">✨ AI 비서실 & 공유방</h2>
+                        <p class="text-gray-600">아이디어를 생성하고 동생과 실시간으로 공유하세요. (클라우드 저장)</p>
+                    </div>
+                    <div class="text-4xl">🤝</div>
+                </div>
+                
+                <!-- API Key UI -->
+                <div id="api-key-container" class="mt-6 p-6 bg-orange-50 border border-orange-200 rounded-lg">
+                     <div class="flex justify-between items-center mb-4">
+                        <label class="block text-lg font-bold text-gray-800">🔑 AI API 키 설정</label>
+                     </div>
+                     <div id="key-input-area">
+                         <p class="text-sm text-gray-600 mb-2">API 키를 입력하면 브라우저에 안전하게 저장됩니다.</p>
+                         <div class="flex gap-2">
+                            <input type="password" id="manual-api-key" class="flex-grow p-3 border rounded shadow-inner" placeholder="AIzaSy..." onchange="saveApiKey()">
+                            <button onclick="saveApiKey()" class="px-6 py-2 bg-gray-800 text-white rounded font-bold hover:bg-gray-700 shadow-md transition">저장</button>
+                         </div>
+                     </div>
+                     <div id="key-saved-area" class="hidden">
+                        <div class="flex items-center gap-2 mb-2"><span class="text-green-600 font-bold">✅ API 키가 저장되었습니다.</span></div>
+                        <div class="flex gap-2 items-center">
+                            <div class="bg-gray-200 text-gray-500 px-4 py-2 rounded flex-grow font-mono text-sm">AIzaSy...******************</div>
+                            <button onclick="deleteApiKey()" class="px-4 py-2 bg-red-500 text-white rounded font-bold hover:bg-red-600 shadow-md transition">삭제</button>
+                        </div>
+                     </div>
+                </div>
+            </div>
+
+            <!-- Identity Selector -->
+            <div class="flex justify-end items-center gap-2">
+                <span class="text-sm font-bold text-gray-700">작성자 선택:</span>
+                <select id="writer-select" class="p-2 border rounded border-gray-300 text-sm">
+                    <option value="나 (형/누나)">🙋 나 (형/누나)</option>
+                    <option value="동생">🙇 동생</option>
+                </select>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Tool 1: Scenario -->
+                <div class="card p-6 border-t-4" style="border-color: var(--dw-point);">
+                    <h3 class="text-xl font-bold mb-4 flex items-center" style="color: var(--dw-dark);">
+                        <span class="mr-2">🎬</span> AI 시나리오 작가
+                    </h3>
+                    <div class="space-y-4">
+                        <textarea id="scenario-input" class="w-full p-3 border rounded-lg focus:ring-2 h-24" style="border-color: var(--dw-sand); --tw-ring-color: var(--dw-camel);" placeholder="상황 입력 (예: 동원이가 노트북 위에서 잠듬)"></textarea>
+                        <button onclick="generateScript()" class="w-full text-white py-3 rounded-lg font-bold hover:opacity-90 transition flex justify-center items-center shadow-md" style="background-color: var(--dw-point);">
+                            <span id="scenario-btn-text">✨ 시나리오 생성</span>
+                            <div id="scenario-loader" class="loader ml-2 hidden" style="width: 20px; height: 20px; border-width: 2px; border-top-color: white;"></div>
+                        </button>
+                        <div id="scenario-output" class="hidden mt-4 space-y-4"></div>
+                    </div>
+                </div>
+
+                <!-- Tool 2: Caption -->
+                <div class="card p-6 border-t-4" style="border-color: var(--dw-point);">
+                    <h3 class="text-xl font-bold mb-4 flex items-center" style="color: var(--dw-dark);">
+                        <span class="mr-2">📸</span> AI 캡션 생성기
+                    </h3>
+                    <div class="space-y-4">
+                        <textarea id="caption-input" class="w-full p-3 border rounded-lg focus:ring-2 h-24" style="border-color: var(--dw-sand); --tw-ring-color: var(--dw-camel);" placeholder="사진 내용 입력 (예: 산책 가자니까 죽은 척 함)"></textarea>
+                        <button onclick="generateCaption()" class="w-full text-white py-3 rounded-lg font-bold hover:opacity-90 transition flex justify-center items-center shadow-md" style="background-color: var(--dw-point);">
+                            <span id="caption-btn-text">✨ 캡션 생성</span>
+                            <div id="caption-loader" class="loader ml-2 hidden" style="width: 20px; height: 20px; border-width: 2px; border-top-color: white;"></div>
+                        </button>
+                        <div id="caption-output" class="hidden mt-4 space-y-4"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shared Board -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mt-8 relative">
+                <div class="flex flex-col md:flex-row items-center justify-between mb-4">
+                    <div class="mb-2 md:mb-0">
+                        <h3 class="text-xl font-bold flex items-center" style="color: var(--dw-dark);">
+                            <span class="mr-2">🔥</span> 2인용 아이디어 공유방
+                        </h3>
+                        <span id="connection-status" class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full">● 연결 확인 중...</span>
+                    </div>
+                    
+                    <!-- NEW: Export Button -->
+                    <button onclick="downloadCSV()" class="flex items-center text-sm bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition shadow-sm">
+                        <span class="mr-2">📊</span> 엑셀/스프레드시트로 내보내기
+                    </button>
+                </div>
+                
+                <div id="shared-list" class="grid md:grid-cols-2 gap-4">
+                    <div class="col-span-2 text-center py-12 text-gray-400">
+                        <div class="loader mx-auto mb-2" style="border-color: #eee; border-top-color: var(--dw-point);"></div>
+                        데이터를 불러오는 중입니다...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-8 mt-8" style="background-color: var(--dw-dark); color: var(--dw-sand);">
+        <div class="container mx-auto px-4">
+            <p class="serif-font font-bold text-lg mb-2">동원 회장님 전략기획실</p>
+            <p class="text-xs opacity-70">Double Life Dog Dongwon Project</p>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Global Config
+        const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : new URLSearchParams(window.location.search).get('__firebase_config');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : new URLSearchParams(window.location.search).get('__app_id') || 'default-app';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : undefined;
+
+        let db;
+        let auth;
+        let currentUser = null;
+        let isFirebaseAvailable = false;
+        let currentIdeasData = []; // Store data for CSV export
+
+        async function initFirebase() {
+            const statusEl = document.getElementById('connection-status');
+            
+            if (!firebaseConfigStr) {
+                console.warn("Firebase configuration missing. Switching to Local Mode.");
+                statusEl.textContent = "🟠 로컬 저장 모드 (기기 내 저장)";
+                statusEl.className = "text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full";
+                renderSharedListFromLocal(); // Load local data immediately
+                return;
+            }
+
+            try {
+                const app = initializeApp(JSON.parse(firebaseConfigStr));
+                auth = getAuth(app);
+                db = getFirestore(app);
+                
+                // Auth Logic
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Auth Listener
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        currentUser = user;
+                        isFirebaseAvailable = true;
+                        statusEl.textContent = "🟢 실시간 연동 중 (동생과 공유 가능)";
+                        statusEl.className = "text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full animate-pulse";
+                        subscribeToIdeas();
+                    } else {
+                        // Auth lost, fallback
+                        currentUser = null;
+                        isFirebaseAvailable = false;
+                        statusEl.textContent = "🟠 로컬 저장 모드 (연결 끊김)";
+                        renderSharedListFromLocal();
+                    }
+                });
+
+            } catch (e) {
+                console.error("Firebase init failed:", e);
+                statusEl.textContent = "🟠 로컬 저장 모드 (설정 오류)";
+                statusEl.className = "text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full";
+                renderSharedListFromLocal();
+            }
+        }
+
+        // Initialize Firebase
+        initFirebase();
+
+        // --- Shared Idea Functions attached to Window ---
+        
+        window.saveIdea = async (data, type) => {
+            const writer = document.getElementById('writer-select').value;
+            const newItem = {
+                type: type,
+                data: data,
+                writer: writer,
+                createdAt: new Date().toISOString()
+            };
+
+            // CASE 1: Firebase Available
+            if (isFirebaseAvailable && currentUser) {
+                const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_ideas');
+                try {
+                    await addDoc(collectionRef, newItem);
+                    alert("아이디어가 공유방(클라우드)에 저장되었습니다!");
+                } catch (e) {
+                    console.error("Cloud save failed, falling back to local:", e);
+                    saveLocal(newItem); // Fallback
+                }
+            } 
+            // CASE 2: Local Mode
+            else {
+                saveLocal(newItem);
+            }
+        };
+
+        function saveLocal(item) {
+            const saved = JSON.parse(localStorage.getItem('dw_shared_ideas_local') || '[]');
+            // Add ID for local items
+            item.id = 'local_' + Date.now();
+            saved.push(item);
+            localStorage.setItem('dw_shared_ideas_local', JSON.stringify(saved));
+            renderSharedListFromLocal();
+            alert("아이디어가 보관함(로컬)에 저장되었습니다! (서버 미연동 상태)");
+        }
+
+        window.deleteIdea = async (id) => {
+            if (!confirm("정말 이 아이디어를 삭제하시겠습니까?")) return;
+            
+            // Determine if it's a local ID or Firebase ID
+            if (id.startsWith('local_')) {
+                const saved = JSON.parse(localStorage.getItem('dw_shared_ideas_local') || '[]');
+                const updated = saved.filter(item => item.id !== id);
+                localStorage.setItem('dw_shared_ideas_local', JSON.stringify(updated));
+                renderSharedListFromLocal();
+            } else if (isFirebaseAvailable && currentUser) {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'shared_ideas', id);
+                try {
+                    await deleteDoc(docRef);
+                } catch (e) {
+                    alert("삭제 실패: " + e.message);
+                }
+            } else {
+                alert("삭제할 수 없습니다. (연결 상태 확인 필요)");
+            }
+        };
+
+        // --- Rendering Logic ---
+
+        function renderList(ideas) {
+            currentIdeasData = ideas; // Update global data for CSV export
+            const listEl = document.getElementById('shared-list');
+            
+            if (ideas.length === 0) {
+                listEl.innerHTML = '<p class="text-gray-500 text-sm col-span-2 text-center py-8">아직 아이디어가 없습니다. <br>첫 아이디어를 만들어보세요!</p>';
+                return;
+            }
+
+            let html = '';
+            ideas.forEach(item => {
+                const isScenario = item.type === 'scenario';
+                const badgeColor = isScenario ? 'bg-[#C28E5B]' : 'bg-[#C9734E]';
+                const typeLabel = isScenario ? '시나리오' : '캡션';
+                const dateStr = new Date(item.createdAt).toLocaleDateString();
+                const isLocal = item.id.startsWith('local_');
+                
+                let contentHtml = '';
+                if (isScenario) {
+                    contentHtml = `
+                        <div class="mt-2 font-bold text-gray-800 border-l-4 border-[#3D2B24] pl-2 mb-2">"${item.data.narration ? item.data.narration.substring(0, 40) : ''}..."</div>
+                        <div class="text-gray-600 text-xs truncate">🎬 ${item.data.visual}</div>
+                    `;
+                } else {
+                    contentHtml = `
+                        <div class="mt-2 font-bold text-gray-900">${item.data.title}</div>
+                        <div class="mt-1 text-gray-600 line-clamp-2 text-xs">${item.data.caption}</div>
+                    `;
+                }
+
+                html += `
+                    <div class="card p-4 text-sm relative group bg-white border ${isLocal ? 'border-orange-200 bg-orange-50' : 'border-gray-100'} hover:border-[#C28E5B] transition shadow-sm">
+                        <div class="absolute top-2 right-2 flex gap-2">
+                            <span class="text-xs bg-white border border-gray-200 text-gray-600 px-2 py-0.5 rounded font-bold">✍️ ${item.writer || '익명'}</span>
+                            <button onclick="deleteIdea('${item.id}')" class="text-gray-300 hover:text-red-500 font-bold px-1 transition">✕</button>
+                        </div>
+                        <div class="flex items-center gap-2 mb-2 mt-1">
+                            <span class="${badgeColor} text-white text-xs px-2 py-0.5 rounded">${typeLabel}</span>
+                            <span class="text-gray-400 text-xs">${dateStr}</span>
+                            ${isLocal ? '<span class="text-[10px] text-orange-600 border border-orange-200 px-1 rounded">Local</span>' : ''}
+                        </div>
+                        ${contentHtml}
+                    </div>
+                `;
+            });
+            listEl.innerHTML = html;
+        }
+
+        // Render Local Data
+        function renderSharedListFromLocal() {
+            const ideas = JSON.parse(localStorage.getItem('dw_shared_ideas_local') || '[]');
+            // Sort local ideas
+            ideas.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            renderList(ideas);
+        }
+
+        // Subscribe to Firebase Data
+        function subscribeToIdeas() {
+            const listEl = document.getElementById('shared-list');
+            const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_ideas');
+            
+            onSnapshot(collectionRef, (snapshot) => {
+                const ideas = [];
+                snapshot.forEach((doc) => {
+                    ideas.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Sort
+                ideas.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                renderList(ideas);
+            }, (error) => {
+                console.warn("Snapshot error (switching to local view):", error);
+                const statusEl = document.getElementById('connection-status');
+                statusEl.textContent = "🟠 로컬 보기 모드 (서버 연결 불가)";
+                statusEl.className = "text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full";
+                renderSharedListFromLocal();
+            });
+        }
+
+        // --- CSV Export Logic ---
+        window.downloadCSV = () => {
+            if (!currentIdeasData || currentIdeasData.length === 0) {
+                alert("내보낼 데이터가 없습니다.");
+                return;
+            }
+
+            // CSV Header
+            let csvContent = "\uFEFF"; // BOM for Excel encoding support
+            csvContent += "날짜,작성자,유형,내용1(제목/대사),내용2(본문/연출),해시태그/BGM\n";
+
+            currentIdeasData.forEach(item => {
+                const date = new Date(item.createdAt).toLocaleDateString();
+                const writer = item.writer || '익명';
+                const type = item.type === 'scenario' ? '시나리오' : '캡션';
+                
+                let col1 = '', col2 = '', col3 = '';
+                
+                if (item.type === 'scenario') {
+                    col1 = `"${(item.data.narration || '').replace(/"/g, '""')}"`; // Escape quotes
+                    col2 = `"${(item.data.visual || '').replace(/"/g, '""')}"`;
+                    col3 = `"${(item.data.bgm || '').replace(/"/g, '""')}"`;
+                } else {
+                    col1 = `"${(item.data.title || '').replace(/"/g, '""')}"`;
+                    col2 = `"${(item.data.caption || '').replace(/"/g, '""')}"`;
+                    col3 = `"${(item.data.hashtags || '').replace(/"/g, '""')}"`;
+                }
+
+                csvContent += `${date},${writer},${type},${col1},${col2},${col3}\n`;
+            });
+
+            // Trigger Download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `동원회장님_아이디어_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+    </script>
+
+    <!-- Vanilla Scripts -->
+    <script>
+        // Navigation Logic
+        function navigateTo(sectionId) {
+            const sections = ['section-persona', 'section-production', 'section-scenarios', 'section-strategy', 'section-ai-tools'];
+            
+            // Hide all sections
+            sections.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
+            });
+            
+            // Show target
+            const targetSection = document.getElementById(sectionId);
+            if(targetSection) targetSection.classList.remove('hidden');
+
+            // Update Nav Buttons
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.getAttribute('onclick').includes(sectionId)) {
+                    btn.classList.add('active');
+                }
+            });
+
+            if(sectionId === 'section-persona') renderChart();
+        }
+
+        // Tab Logic for Scenarios
+        function showScenario(num) {
+            for(let i=1; i<=3; i++) {
+                document.getElementById(`scenario-${i}`).classList.add('hidden');
+                document.getElementById(`tab-${i}`).classList.remove('active');
+                document.getElementById(`tab-${i}`).classList.remove('border-b-3');
+            }
+            document.getElementById(`scenario-${num}`).classList.remove('hidden');
+            document.getElementById(`tab-${num}`).classList.add('active');
+        }
+
+        // Chart.js Implementation
+        let personaChart = null;
+        function renderChart() {
+            if (personaChart) return;
+            
+            const canvas = document.getElementById('personaChart');
+            if(!canvas) return; // Guard against missing element
+
+            const ctx = canvas.getContext('2d');
+            const rootStyles = getComputedStyle(document.documentElement);
+            const dwDark = rootStyles.getPropertyValue('--dw-dark').trim();
+            const dwPoint = rootStyles.getPropertyValue('--dw-point').trim();
+            const dwCamel = rootStyles.getPropertyValue('--dw-camel').trim();
+
+            personaChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['엄근진', '뻔뻔함', '식탐', '활동량', '나이', '귀찮음'],
+                    datasets: [{
+                        label: '동원 회장님',
+                        data: [95, 98, 85, 10, 90, 99], 
+                        backgroundColor: 'rgba(194, 142, 91, 0.3)',
+                        borderColor: dwCamel, 
+                        pointBackgroundColor: dwPoint,
+                        pointBorderColor: '#fff',
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(61, 43, 36, 0.1)' },
+                            grid: { color: 'rgba(61, 43, 36, 0.1)' },
+                            pointLabels: { font: { size: 12, weight: 'bold' }, color: dwDark },
+                            ticks: { display: false, backdropColor: 'transparent' }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function copyHashtags() {
+            const text = document.getElementById('hashtag-box').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const msg = document.getElementById('copy-msg');
+                msg.classList.remove('hidden');
+                setTimeout(() => { msg.classList.add('hidden'); }, 2000);
+            });
+        }
+
+        // Profile Image Logic
+        function updateProfileImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const result = e.target.result;
+                    document.getElementById('profile-image').src = result;
+                    try { localStorage.setItem('dongwon_profile_image', result); } catch (e) { alert('이미지가 너무 큽니다.'); }
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        function initProfileImage() {
+            const savedImage = localStorage.getItem('dongwon_profile_image');
+            if (savedImage) document.getElementById('profile-image').src = savedImage;
+        }
+
+        // API Key Logic
+        const apiKey = ""; 
+
+        function checkApiKey() {
+            const savedKey = localStorage.getItem('gemini_user_api_key');
+            if (savedKey) {
+                document.getElementById('key-input-area').classList.add('hidden');
+                document.getElementById('key-saved-area').classList.remove('hidden');
+            } else {
+                document.getElementById('key-input-area').classList.remove('hidden');
+                document.getElementById('key-saved-area').classList.add('hidden');
+            }
+        }
+
+        function saveApiKey() {
+            const keyInput = document.getElementById('manual-api-key').value.trim();
+            if (keyInput) {
+                localStorage.setItem('gemini_user_api_key', keyInput);
+                alert('API 키가 저장되었습니다!');
+                checkApiKey();
+                document.getElementById('manual-api-key').value = '';
+            } else {
+                alert('키를 입력해주세요.');
+            }
+        }
+
+        function deleteApiKey() {
+            if(confirm('API 키를 삭제하시겠습니까?')) {
+                localStorage.removeItem('gemini_user_api_key');
+                checkApiKey();
+            }
+        }
+
+        // Gemini API Logic (JSON Mode)
+        async function callGemini(prompt, type) {
+            const currentKey = apiKey || localStorage.getItem('gemini_user_api_key');
+            
+            if (!currentKey) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                if(type === 'scenario') return JSON.stringify({
+                    visual: "침대에 누워있는 동원이를 위에서 아래로 찍음.",
+                    narration: "김비서, 지금 몇 시인가. 해가 중천이야.",
+                    bgm: "우아한 클래식 (Vivaldi - Four Seasons)"
+                });
+                else return JSON.stringify({
+                    title: "월세 대신 귀여움으로 퉁치자",
+                    caption: "솔직히 이 정도 외모면 숙박비 무료 아닌가?",
+                    hashtags: "#개르신 #뻔뻔견 #동원이의이중생활"
+                });
+            }
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${currentKey}`;
+            const instruction = type === 'scenario' 
+                ? "You are a scriptwriter for an 11-year-old cynical dog (Dongwon). He uses old-fashioned, authoritative language (Hao-che). Return ONLY valid JSON with keys: 'visual', 'narration', 'bgm'."
+                : "You are an Instagram manager for a cynical 11-year-old dog (Dongwon). Return ONLY valid JSON with keys: 'title', 'caption', 'hashtags'.";
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: instruction }] },
+                generationConfig: { responseMimeType: "application/json" }
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                return null;
+            }
+        }
+
+        // Generate Functions
+        window.generateScript = async () => {
+            const input = document.getElementById('scenario-input').value;
+            if (!input) return alert("상황을 입력해주세요!");
+
+            const btnText = document.getElementById('scenario-btn-text');
+            const loader = document.getElementById('scenario-loader');
+            const outputBox = document.getElementById('scenario-output');
+
+            btnText.innerText = "생성 중...";
+            loader.classList.remove('hidden');
+            outputBox.classList.add('hidden');
+
+            const result = await callGemini(input, 'scenario');
+            
+            if(result) {
+                try {
+                    const data = JSON.parse(result);
+                    renderScenarioResult(data);
+                    outputBox.classList.remove('hidden');
+                } catch(e) {
+                    outputBox.innerHTML = `<div class="p-4 text-red-500">데이터 처리 오류: ${e.message}</div>`;
+                    outputBox.classList.remove('hidden');
+                }
+            } else {
+                alert("생성 실패! API 키를 확인해주세요.");
+            }
+
+            btnText.innerText = "✨ 시나리오 생성";
+            loader.classList.add('hidden');
+        }
+
+        window.renderScenarioResult = (data) => {
+            const html = `
+                <div class="bg-gray-50 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+                    <div class="bg-[#3D2B24] text-white px-4 py-2 font-bold text-sm flex justify-between items-center">
+                        <span>🎬 생성된 시나리오</span>
+                        <button onclick='saveIdea(${JSON.stringify(data).replace(/'/g, "&#39;")}, "scenario")' class="bg-[#C9734E] hover:bg-[#A65C3B] text-white px-3 py-1 rounded text-xs transition">💾 공유방에 저장</button>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <div>
+                            <div class="text-xs font-bold text-[#C28E5B] uppercase mb-1">Visual</div>
+                            <div class="text-gray-800 bg-white p-3 rounded border border-gray-100 shadow-sm">${data.visual}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-[#C28E5B] uppercase mb-1">Narration</div>
+                            <div class="text-gray-800 bg-white p-3 rounded border border-gray-100 shadow-sm border-l-4 border-l-[#3D2B24]">"${data.narration}"</div>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-[#C28E5B] uppercase mb-1">BGM</div>
+                            <div class="text-gray-600 italic text-sm">🎵 ${data.bgm}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('scenario-output').innerHTML = html;
+        }
+
+        window.generateCaption = async () => {
+            const input = document.getElementById('caption-input').value;
+            if (!input) return alert("사진 내용을 입력해주세요!");
+
+            const btnText = document.getElementById('caption-btn-text');
+            const loader = document.getElementById('caption-loader');
+            const outputBox = document.getElementById('caption-output');
+
+            btnText.innerText = "생성 중...";
+            loader.classList.remove('hidden');
+            outputBox.classList.add('hidden');
+
+            const result = await callGemini(input, 'caption');
+            
+            if(result) {
+                try {
+                    const data = JSON.parse(result);
+                    renderCaptionResult(data);
+                    outputBox.classList.remove('hidden');
+                } catch(e) { console.error(e); }
+            }
+
+            btnText.innerText = "✨ 캡션 생성";
+            loader.classList.add('hidden');
+        }
+
+        window.renderCaptionResult = (data) => {
+            const html = `
+                <div class="bg-gray-50 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+                    <div class="bg-[#3D2B24] text-white px-4 py-2 font-bold text-sm flex justify-between items-center">
+                        <span>📱 인스타그램 캡션</span>
+                        <button onclick='saveIdea(${JSON.stringify(data).replace(/'/g, "&#39;")}, "caption")' class="bg-[#C9734E] hover:bg-[#A65C3B] text-white px-3 py-1 rounded text-xs transition">💾 공유방에 저장</button>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <div class="font-bold text-lg text-gray-900">${data.title}</div>
+                        <div class="text-gray-700 whitespace-pre-wrap">${data.caption}</div>
+                        <div class="text-blue-600 text-sm break-all">${data.hashtags}</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('caption-output').innerHTML = html;
+        }
+
+        // Initialize
+        window.onload = function() {
+            initProfileImage();
+            checkApiKey();
+            // Start at Persona tab safely
+            navigateTo('section-persona');
+        };
+    </script>
+</body>
+</html>
